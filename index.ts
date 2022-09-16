@@ -1,4 +1,22 @@
-function statement(invoice: any, plays: any) {
+interface IPerformance {
+  playID: string;
+  audience: number;
+}
+
+interface IInvoice {
+  customer: string;
+  performances: IPerformance[];
+}
+
+type IPlays = Record<
+  string,
+  {
+    type: string;
+    name: string;
+  }
+>;
+
+function statement(invoice: IInvoice, plays: IPlays) {
   let totalAmount = 0;
   let volumeCredits = 0;
   let result = `청구 내역 (고객명: ${invoice.customer})\n`;
