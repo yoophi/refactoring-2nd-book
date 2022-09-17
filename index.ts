@@ -3,6 +3,10 @@ interface IPerformance {
   audience: number;
 }
 
+interface IPerformanceWithMeta extends IPerformance {
+  play: IPlay;
+}
+
 interface IInvoice {
   customer: string;
   performances: IPerformance[];
@@ -13,12 +17,24 @@ interface IPlay {
   name: string;
 }
 
-interface IStatementData {}
+interface IStatementData {
+  customer: string;
+  performances: IPerformanceWithMeta[];
+}
 
 type IPlays = Record<string, IPlay>;
 
 function statement(invoice: IInvoice, plays: IPlays) {
-  const statementData: IStatementData = {};
+  const statementData: IStatementData = {
+    customer: invoice.customer,
+    performances: invoice.performances.map((performance) => {
+      const result: IPerformanceWithMeta = {
+        ...performance,
+        play: playFor(performance),
+      };
+      return result;
+    }),
+  };
 
   return renderPlainText(statementData, invoice, plays);
 
@@ -27,10 +43,10 @@ function statement(invoice: IInvoice, plays: IPlays) {
     invoice: IInvoice,
     plays: IPlays
   ) {
-    let result = `청구 내역 (고객명: ${invoice.customer})\n`;
+    let result = `청구 내역 (고객명: ${data.customer})\n`;
 
-    for (let perf of invoice.performances) {
-      result += ` ${playFor(perf).name}: ${usd(amountFor(perf))} (${
+    for (let perf of data.performances) {
+      result += ` ${perf.play.name}: ${usd(amountFor(perf))} (${
         perf.audience
       }석\n`;
     }
@@ -40,7 +56,7 @@ function statement(invoice: IInvoice, plays: IPlays) {
 
     function totalAmount() {
       let result = 0;
-      for (let perf of invoice.performances) {
+      for (let perf of data.performances) {
         result += amountFor(perf);
       }
       return result;
@@ -48,7 +64,7 @@ function statement(invoice: IInvoice, plays: IPlays) {
 
     function totalVolumeCredits() {
       let volumeCredits = 0;
-      for (let perf of invoice.performances) {
+      for (let perf of data.performances) {
         volumeCredits += volumeCreditsFor(perf);
       }
       return volumeCredits;
@@ -71,14 +87,9 @@ function statement(invoice: IInvoice, plays: IPlays) {
       return result;
     }
 
-    function playFor(aPerformance: IPerformance) {
-      return plays[aPerformance.playID];
-    }
-
-    function amountFor(aPerformance: IPerformance) {
+    function amountFor(aPerformance: IPerformanceWithMeta) {
       let result = 0;
-      const play = playFor(aPerformance);
-      switch (play.type) {
+      switch (aPerformance.play.type) {
         case "tragedy":
           result = 40000;
           if (aPerformance.audience > 30) {
@@ -92,10 +103,14 @@ function statement(invoice: IInvoice, plays: IPlays) {
           }
           break;
         default:
-          throw new Error(`알 수 없는 장르: ${play.type}`);
+          throw new Error(`알 수 없는 장르: ${aPerformance.play.type}`);
       }
       return result;
     }
+  }
+
+  function playFor(aPerformance: IPerformance) {
+    return plays[aPerformance.playID];
   }
 }
 
