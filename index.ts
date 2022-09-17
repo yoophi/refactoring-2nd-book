@@ -20,10 +20,10 @@ function statement(invoice: IInvoice, plays: IPlays) {
   let result = `청구 내역 (고객명: ${invoice.customer})\n`;
 
   for (let perf of invoice.performances) {
-    result += ` ${playFor(perf).name}: ${usd(
-      amountFor(perf, playFor(perf))
-    )} (${perf.audience}석\n`;
-    totalAmount += amountFor(perf, playFor(perf));
+    result += ` ${playFor(perf).name}: ${usd(amountFor(perf))} (${
+      perf.audience
+    }석\n`;
+    totalAmount += amountFor(perf);
   }
 
   result += `총액: ${usd(totalAmount)}\n`;
@@ -59,8 +59,9 @@ function statement(invoice: IInvoice, plays: IPlays) {
     return plays[aPerformance.playID];
   }
 
-  function amountFor(aPerformance: IPerformance, play: IPlay) {
+  function amountFor(aPerformance: IPerformance) {
     let result = 0;
+    const play = playFor(aPerformance);
     switch (play.type) {
       case "tragedy":
         result = 40000;
