@@ -3,10 +3,6 @@ interface IPerformance {
   audience: number;
 }
 
-interface IPerformanceWithPlay extends IPerformance {
-  play: IPlay;
-}
-
 interface IPerformanceWithMeta extends IPerformance {
   play: IPlay;
   amount: number;
@@ -31,29 +27,24 @@ interface IStatementData {
 type IPlays = Record<string, IPlay>;
 
 function statement(invoice: IInvoice, plays: IPlays) {
-  const statementData: IStatementData = {
-    customer: invoice.customer,
-    performances: invoice.performances.map((performance) => {
-      const play = playFor(performance);
-      const amount = amountFor({ ...performance, play });
-      const volumeCredits = volumeCreditsFor({ ...performance, play });
-      const result: IPerformanceWithMeta = {
-        ...performance,
-        play,
-        amount,
-        volumeCredits,
-      };
-      return result;
-    }),
-  };
+  const statementData: any = {};
+  statementData.customer = invoice.customer;
+  statementData.performances = invoice.performances.map(enrichPerformance);
+  statementData.totalAmount = totalAmount(statementData);
+  statementData.totalVolumeCredits = totalVolumeCredits(statementData);
 
   return renderPlainText(statementData, invoice, plays);
 
-  function renderPlainText(
-    data: IStatementData,
-    invoice: IInvoice,
-    plays: IPlays
-  ) {
+  function enrichPerformance(performance: IPerformance) {
+    const result: any = Object.assign({}, performance);
+    result.play = playFor(result);
+    result.amount = amountFor(result);
+    result.volumeCredits = volumeCreditsFor(result);
+
+    return result as IPerformanceWithMeta;
+  }
+
+  function renderPlainText(data: any, invoice: IInvoice, plays: IPlays) {
     let result = `청구 내역 (고객명: ${data.customer})\n`;
 
     for (let perf of data.performances) {
@@ -61,25 +52,9 @@ function statement(invoice: IInvoice, plays: IPlays) {
         perf.audience
       }석\n`;
     }
-    result += `총액: ${usd(totalAmount())}\n`;
-    result += `적립 포인트: ${totalVolumeCredits()}점\n`;
+    result += `총액: ${usd(data.totalAmount)}\n`;
+    result += `적립 포인트: ${data.totalVolumeCredits}점\n`;
     return result;
-
-    function totalAmount() {
-      let result = 0;
-      for (let perf of data.performances) {
-        result += perf.amount;
-      }
-      return result;
-    }
-
-    function totalVolumeCredits() {
-      let volumeCredits = 0;
-      for (let perf of data.performances) {
-        volumeCredits += perf.volumeCredits;
-      }
-      return volumeCredits;
-    }
 
     function usd(aNumber: number) {
       return new Intl.NumberFormat("en-US", {
@@ -94,7 +69,7 @@ function statement(invoice: IInvoice, plays: IPlays) {
     return plays[aPerformance.playID];
   }
 
-  function amountFor(aPerformance: IPerformanceWithPlay) {
+  function amountFor(aPerformance: IPerformance & { play: IPlay }) {
     let result = 0;
     switch (aPerformance.play.type) {
       case "tragedy":
@@ -115,12 +90,28 @@ function statement(invoice: IInvoice, plays: IPlays) {
     return result;
   }
 
-  function volumeCreditsFor(perf: IPerformanceWithPlay) {
+  function volumeCreditsFor(perf: IPerformance & { play: IPlay }) {
     let result = 0;
     result += Math.max(perf.audience - 30, 0);
     if ("comedy" === perf.play.type) result += Math.floor(perf.audience / 5);
 
     return result;
+  }
+
+  function totalAmount(data: any) {
+    let result = 0;
+    for (let perf of data.performances) {
+      result += perf.amount;
+    }
+    return result;
+  }
+
+  function totalVolumeCredits(data: any) {
+    let volumeCredits = 0;
+    for (let perf of data.performances) {
+      volumeCredits += perf.volumeCredits;
+    }
+    return volumeCredits;
   }
 }
 
