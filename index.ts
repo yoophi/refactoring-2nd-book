@@ -22,18 +22,25 @@ interface IPlay {
 interface IStatementData {
   customer: string;
   performances: IEnrichPerformance[];
+  totalAmount: number;
+  totalVolumeCredits: number;
 }
 
 type IPlays = Record<string, IPlay>;
 
 function statement(invoice: IInvoice, plays: IPlays) {
-  const statementData: any = {};
-  statementData.customer = invoice.customer;
-  statementData.performances = invoice.performances.map(enrichPerformance);
-  statementData.totalAmount = totalAmount(statementData);
-  statementData.totalVolumeCredits = totalVolumeCredits(statementData);
+  const statementData: any = createStatementData(invoice, plays);
 
   return renderPlainText(statementData, invoice, plays);
+
+  function createStatementData(invoice: IInvoice, plays: IPlays) {
+    const result: any = {};
+    result.customer = invoice.customer;
+    result.performances = invoice.performances.map(enrichPerformance);
+    result.totalAmount = totalAmount(result);
+    result.totalVolumeCredits = totalVolumeCredits(result);
+    return result as IStatementData;
+  }
 
   function enrichPerformance(performance: IPerformance) {
     const result: any = Object.assign({}, performance);
@@ -44,7 +51,11 @@ function statement(invoice: IInvoice, plays: IPlays) {
     return result as IEnrichPerformance;
   }
 
-  function renderPlainText(data: any, invoice: IInvoice, plays: IPlays) {
+  function renderPlainText(
+    data: IStatementData,
+    invoice: IInvoice,
+    plays: IPlays
+  ) {
     let result = `청구 내역 (고객명: ${data.customer})\n`;
 
     for (let perf of data.performances) {
@@ -98,7 +109,7 @@ function statement(invoice: IInvoice, plays: IPlays) {
     return result;
   }
 
-  function totalAmount(data: any) {
+  function totalAmount(data: { performances: IEnrichPerformance[] }) {
     let result = 0;
     for (let perf of data.performances) {
       result += perf.amount;
@@ -106,7 +117,7 @@ function statement(invoice: IInvoice, plays: IPlays) {
     return result;
   }
 
-  function totalVolumeCredits(data: any) {
+  function totalVolumeCredits(data: { performances: IEnrichPerformance[] }) {
     let volumeCredits = 0;
     for (let perf of data.performances) {
       volumeCredits += perf.volumeCredits;
