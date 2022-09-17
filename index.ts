@@ -25,12 +25,12 @@ function statement(invoice: IInvoice, plays: IPlays) {
     minimumFractionDigits: 2,
   }).format;
   for (let perf of invoice.performances) {
-    const play = plays[perf.playID];
-    const thisAmount = amountFor(perf, play);
+    const thisAmount = amountFor(perf, playFor(perf));
     volumeCredits += Math.max(perf.audience - 30, 0);
-    if ("comedy" === play.type) volumeCredits += Math.floor(perf.audience / 5);
+    if ("comedy" === playFor(perf).type)
+      volumeCredits += Math.floor(perf.audience / 5);
 
-    result += ` ${play.name}: ${format(thisAmount / 100)} (${
+    result += ` ${playFor(perf).name}: ${format(thisAmount / 100)} (${
       perf.audience
     }석\n`;
     totalAmount += thisAmount;
@@ -39,6 +39,10 @@ function statement(invoice: IInvoice, plays: IPlays) {
   result += `총액: ${format(totalAmount / 100)}\n`;
   result += `적립 포인트: ${volumeCredits}점\n`;
   return result;
+
+  function playFor(aPerformance: IPerformance) {
+    return plays[aPerformance.playID];
+  }
 
   function amountFor(aPerformance: IPerformance, play: IPlay) {
     let result = 0;
