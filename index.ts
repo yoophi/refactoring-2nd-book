@@ -3,8 +3,14 @@ interface IPerformance {
   audience: number;
 }
 
+interface IPerformanceWithPlay extends IPerformance {
+  play: IPlay;
+}
+
 interface IPerformanceWithMeta extends IPerformance {
   play: IPlay;
+  amount: number;
+  volumeCredits: number;
 }
 
 interface IInvoice {
@@ -28,9 +34,14 @@ function statement(invoice: IInvoice, plays: IPlays) {
   const statementData: IStatementData = {
     customer: invoice.customer,
     performances: invoice.performances.map((performance) => {
+      const play = playFor(performance);
+      const amount = amountFor({ ...performance, play });
+      const volumeCredits = volumeCreditsFor({ ...performance, play });
       const result: IPerformanceWithMeta = {
         ...performance,
-        play: playFor(performance),
+        play,
+        amount,
+        volumeCredits,
       };
       return result;
     }),
@@ -46,7 +57,7 @@ function statement(invoice: IInvoice, plays: IPlays) {
     let result = `청구 내역 (고객명: ${data.customer})\n`;
 
     for (let perf of data.performances) {
-      result += ` ${perf.play.name}: ${usd(amountFor(perf))} (${
+      result += ` ${perf.play.name}: ${usd(perf.amount || 0)} (${
         perf.audience
       }석\n`;
     }
@@ -57,7 +68,7 @@ function statement(invoice: IInvoice, plays: IPlays) {
     function totalAmount() {
       let result = 0;
       for (let perf of data.performances) {
-        result += amountFor(perf);
+        result += perf.amount;
       }
       return result;
     }
@@ -65,7 +76,7 @@ function statement(invoice: IInvoice, plays: IPlays) {
     function totalVolumeCredits() {
       let volumeCredits = 0;
       for (let perf of data.performances) {
-        volumeCredits += volumeCreditsFor(perf);
+        volumeCredits += perf.volumeCredits;
       }
       return volumeCredits;
     }
@@ -77,40 +88,39 @@ function statement(invoice: IInvoice, plays: IPlays) {
         minimumFractionDigits: 2,
       }).format(aNumber / 100);
     }
-
-    function volumeCreditsFor(perf: IPerformance) {
-      let result = 0;
-      result += Math.max(perf.audience - 30, 0);
-      if ("comedy" === playFor(perf).type)
-        result += Math.floor(perf.audience / 5);
-
-      return result;
-    }
-
-    function amountFor(aPerformance: IPerformanceWithMeta) {
-      let result = 0;
-      switch (aPerformance.play.type) {
-        case "tragedy":
-          result = 40000;
-          if (aPerformance.audience > 30) {
-            result += 1000 * (aPerformance.audience - 30);
-          }
-          break;
-        case "comedy":
-          result = 30000;
-          if (aPerformance.audience > 20) {
-            result += 10000 + 500 * (aPerformance.audience - 20);
-          }
-          break;
-        default:
-          throw new Error(`알 수 없는 장르: ${aPerformance.play.type}`);
-      }
-      return result;
-    }
   }
 
   function playFor(aPerformance: IPerformance) {
     return plays[aPerformance.playID];
+  }
+
+  function amountFor(aPerformance: IPerformanceWithPlay) {
+    let result = 0;
+    switch (aPerformance.play.type) {
+      case "tragedy":
+        result = 40000;
+        if (aPerformance.audience > 30) {
+          result += 1000 * (aPerformance.audience - 30);
+        }
+        break;
+      case "comedy":
+        result = 30000;
+        if (aPerformance.audience > 20) {
+          result += 10000 + 500 * (aPerformance.audience - 20);
+        }
+        break;
+      default:
+        throw new Error(`알 수 없는 장르: ${aPerformance.play.type}`);
+    }
+    return result;
+  }
+
+  function volumeCreditsFor(perf: IPerformanceWithPlay) {
+    let result = 0;
+    result += Math.max(perf.audience - 30, 0);
+    if ("comedy" === perf.play.type) result += Math.floor(perf.audience / 5);
+
+    return result;
   }
 }
 
