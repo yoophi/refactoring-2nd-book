@@ -40,25 +40,25 @@ function statement(invoice: IInvoice, plays: IPlays) {
   result += `적립 포인트: ${volumeCredits}점\n`;
   return result;
 
-  function amountFor(perf: IPerformance, play: IPlay) {
-    let thisAmount = 0;
+  function amountFor(aPerformance: IPerformance, play: IPlay) {
+    let result = 0;
     switch (play.type) {
       case "tragedy":
-        thisAmount = 40000;
-        if (perf.audience > 30) {
-          thisAmount += 1000 * (perf.audience - 30);
+        result = 40000;
+        if (aPerformance.audience > 30) {
+          result += 1000 * (aPerformance.audience - 30);
         }
         break;
       case "comedy":
-        thisAmount = 30000;
-        if (perf.audience > 20) {
-          thisAmount += 10000 + 500 * (perf.audience - 20);
+        result = 30000;
+        if (aPerformance.audience > 20) {
+          result += 10000 + 500 * (aPerformance.audience - 20);
         }
         break;
       default:
         throw new Error(`알 수 없는 장르: ${play.type}`);
     }
-    return thisAmount;
+    return result;
   }
 }
 
