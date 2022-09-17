@@ -8,13 +8,12 @@ interface IInvoice {
   performances: IPerformance[];
 }
 
-type IPlays = Record<
-  string,
-  {
-    type: string;
-    name: string;
-  }
->;
+interface IPlay {
+  type: string;
+  name: string;
+}
+
+type IPlays = Record<string, IPlay>;
 
 function statement(invoice: IInvoice, plays: IPlays) {
   let totalAmount = 0;
@@ -27,6 +26,21 @@ function statement(invoice: IInvoice, plays: IPlays) {
   }).format;
   for (let perf of invoice.performances) {
     const play = plays[perf.playID];
+    const thisAmount = amountFor(perf, play);
+    volumeCredits += Math.max(perf.audience - 30, 0);
+    if ("comedy" === play.type) volumeCredits += Math.floor(perf.audience / 5);
+
+    result += ` ${play.name}: ${format(thisAmount / 100)} (${
+      perf.audience
+    }석\n`;
+    totalAmount += thisAmount;
+  }
+
+  result += `총액: ${format(totalAmount / 100)}\n`;
+  result += `적립 포인트: ${volumeCredits}점\n`;
+  return result;
+
+  function amountFor(perf: IPerformance, play: IPlay) {
     let thisAmount = 0;
     switch (play.type) {
       case "tragedy":
@@ -44,18 +58,8 @@ function statement(invoice: IInvoice, plays: IPlays) {
       default:
         throw new Error(`알 수 없는 장르: ${play.type}`);
     }
-    volumeCredits += Math.max(perf.audience - 30, 0);
-    if ("comedy" === play.type) volumeCredits += Math.floor(perf.audience / 5);
-
-    result += ` ${play.name}: ${format(thisAmount / 100)} (${
-      perf.audience
-    }석\n`;
-    totalAmount += thisAmount;
+    return thisAmount;
   }
-
-  result += `총액: ${format(totalAmount / 100)}\n`;
-  result += `적립 포인트: ${volumeCredits}점\n`;
-  return result;
 }
 
 import plays from "./plays.json";
