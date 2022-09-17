@@ -3,7 +3,7 @@ interface IPerformance {
   audience: number;
 }
 
-interface IPerformanceWithMeta extends IPerformance {
+interface IEnrichPerformance extends IPerformance {
   play: IPlay;
   amount: number;
   volumeCredits: number;
@@ -21,7 +21,7 @@ interface IPlay {
 
 interface IStatementData {
   customer: string;
-  performances: IPerformanceWithMeta[];
+  performances: IEnrichPerformance[];
 }
 
 type IPlays = Record<string, IPlay>;
@@ -41,7 +41,7 @@ function statement(invoice: IInvoice, plays: IPlays) {
     result.amount = amountFor(result);
     result.volumeCredits = volumeCreditsFor(result);
 
-    return result as IPerformanceWithMeta;
+    return result as IEnrichPerformance;
   }
 
   function renderPlainText(data: any, invoice: IInvoice, plays: IPlays) {
