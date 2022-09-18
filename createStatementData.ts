@@ -60,18 +60,13 @@ export function createStatementData(
     const result: any = Object.assign({}, aPerformance);
     result.play = playFor(result);
     result.amount = calculator.amount;
-    result.volumeCredits = volumeCreditsFor(result);
+    result.volumeCredits = calculator.volumeCredits;
 
     return result as IEnrichPerformance;
   }
 
   function playFor(aPerformance: IPerformance) {
     return plays[aPerformance.playID];
-  }
-
-  function volumeCreditsFor(aPerformance: IPerformance & { play: IPlay }) {
-    return new PerformanceCalculator(aPerformance, playFor(aPerformance))
-      .volumeCredits;
   }
 
   function totalAmount(data: { performances: IEnrichPerformance[] }) {
