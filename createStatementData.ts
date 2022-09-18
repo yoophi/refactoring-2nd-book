@@ -61,18 +61,10 @@ export function createStatementData(
   }
 
   function totalAmount(data: { performances: IEnrichPerformance[] }) {
-    let result = 0;
-    for (let perf of data.performances) {
-      result += perf.amount;
-    }
-    return result;
+    return data.performances.reduce((total, p) => total + p.amount, 0);
   }
 
   function totalVolumeCredits(data: { performances: IEnrichPerformance[] }) {
-    let volumeCredits = 0;
-    for (let perf of data.performances) {
-      volumeCredits += perf.volumeCredits;
-    }
-    return volumeCredits;
+    return data.performances.reduce((total, p) => total + p.volumeCredits, 0);
   }
 }
