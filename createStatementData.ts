@@ -50,7 +50,7 @@ export function createStatementData(
     );
     const result: any = Object.assign({}, aPerformance);
     result.play = playFor(result);
-    result.amount = amountFor(result);
+    result.amount = calculator.amount;
     result.volumeCredits = volumeCreditsFor(result);
 
     return result as IEnrichPerformance;
@@ -58,11 +58,6 @@ export function createStatementData(
 
   function playFor(aPerformance: IPerformance) {
     return plays[aPerformance.playID];
-  }
-
-  function amountFor(aPerformance: IPerformance & { play: IPlay }) {
-    return new PerformanceCalculator(aPerformance, playFor(aPerformance))
-      .amount;
   }
 
   function volumeCreditsFor(perf: IPerformance & { play: IPlay }) {
