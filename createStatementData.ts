@@ -41,6 +41,10 @@ class PerformanceCalculator {
   }
 }
 
+function createPerformanceCalculator(performance: IPerformance, aPlay: IPlay) {
+  return new PerformanceCalculator(performance, aPlay);
+}
+
 export function createStatementData(
   invoice: IInvoice,
   plays: IPlays
@@ -53,10 +57,11 @@ export function createStatementData(
   return result as IStatementData;
 
   function enrichPerformance(aPerformance: IPerformance) {
-    const calculator = new PerformanceCalculator(
+    const calculator = createPerformanceCalculator(
       aPerformance,
       playFor(aPerformance)
     );
+
     const result: any = Object.assign({}, aPerformance);
     result.play = playFor(result);
     result.amount = calculator.amount;
