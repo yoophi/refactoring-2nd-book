@@ -7,6 +7,10 @@ import {
   IStatementData,
 } from "./types";
 
+class PerformanceCalculator {
+  constructor(public aPerformance: IPerformance, public play: IPlay) {}
+}
+
 export function createStatementData(
   invoice: IInvoice,
   plays: IPlays
@@ -18,8 +22,12 @@ export function createStatementData(
   result.totalVolumeCredits = totalVolumeCredits(result);
   return result as IStatementData;
 
-  function enrichPerformance(performance: IPerformance) {
-    const result: any = Object.assign({}, performance);
+  function enrichPerformance(aPerformance: IPerformance) {
+    const calculator = new PerformanceCalculator(
+      aPerformance,
+      playFor(aPerformance)
+    );
+    const result: any = Object.assign({}, aPerformance);
     result.play = playFor(result);
     result.amount = amountFor(result);
     result.volumeCredits = volumeCreditsFor(result);
